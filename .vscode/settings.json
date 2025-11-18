@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.hpp": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp"
+    }
+}
