@@ -106,10 +106,43 @@ void testSend3() {
     cout << endl;
 }
 
+void testSend4() {
+     UnBufChan<int> chan;
+
+    auto t1 = [&chan] (int x) {
+        //this_thread::sleep_for(1s);
+        for (int i = 0; i < x; i++) {
+            chan.send(i);
+        }
+        //chan.close();
+    };
+
+    auto t2 = [&chan] (int x) {
+        for (int i = 0; i < x; i++) {
+            auto [v, res] = chan.recv();
+            cout << v << " " << res << endl;
+        }
+    };
+
+    auto t3 = [&chan] () {
+        chan.close();
+    };
+
+    {
+        vector<jthread> ths;
+        ths.emplace_back(t1, 10);
+        ths.emplace_back(t2, 6), ths.emplace_back(t2, 7);
+        ths.emplace_back(t3);
+    }
+
+    cout << endl;
+}
+
 
 int main() {
     testBarrier();
     testSend();
     testSend2();
     testSend3();
+    //testSend4();
 }
