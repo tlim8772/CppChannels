@@ -157,8 +157,25 @@ void testSend3() {
     cout << endl;
 }
 
+void testBuffer() {
+    BufChan<int> chan{5};
+
+    auto t1 = [&chan] () {
+        for (int i = 0; i < 5; i++) {
+            bool res = chan.send(i);
+            cout << "send " << i << " " << res << endl;
+        }
+    };
+
+    {
+        jthread{t1};
+    }
+
+}
+
 int main() {
     //testSend1();
     //testSend2();
-    testSend3();
+    //testSend3();
+    testBuffer();
 }
