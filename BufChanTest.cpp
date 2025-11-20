@@ -9,21 +9,21 @@ void testSend1() {
 
     auto t1 = [&chan, &send_res] () {
         //this_thread::sleep_for(300ms);
-        for (int i = 0; i < 800; i++) {
+        for (int i = 0; i < 8000; i++) {
             bool res = chan.send(i);
-            send_res.emplace_back(i, res);
+            if (res) send_res.emplace_back(i, res);
         }
     };
 
     auto t2 = [&chan, &recv_res] () {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 9000; i++) {
             auto [v, res] = chan.recv();
-            recv_res.emplace_back(v, res);
+            if (res) recv_res.emplace_back(v, res);
         }
     };
 
     auto t3 = [&chan] () {
-        this_thread::sleep_for(300ms);
+        this_thread::sleep_for(10ms);
         chan.close();
     };
 
@@ -37,6 +37,7 @@ void testSend1() {
     for (auto p : send_res) {
         cout << "send " << p.first << " " << p.second << endl; 
     }
+    cout << endl;
 
     for (auto p : recv_res) {
         cout << "recv " << p.first << " " << p.second << endl;
