@@ -46,6 +46,54 @@ void testSend1() {
     cout << endl;
 }
 
+void testSend2() {
+    BufChan<int> chan{5};
+    vector<pair<int,bool>> send1, send2, recv1;
+
+    auto s1 = [&send1, &chan] () {
+        for (int i = 0; i < 100; i++) {
+            bool res = chan.send(i);
+            if (res) send1.emplace_back(i, res);
+        }
+    };
+
+    auto s2 = [&send2, &chan] () {
+        for (int i = 100; i < 200; i++) {
+            bool res = chan.send(i);
+            if (res) send2.emplace_back(i, res);
+        }
+    };
+
+    auto r1 = [&recv1, &chan] () {
+        for (int i = 0; i < 200; i++) {
+            auto [v, res] = chan.recv();
+            if (res) recv1.emplace_back(v, res);
+        }
+    };
+
+    {
+        vector<jthread> ths;
+        ths.emplace_back(s1);
+        ths.emplace_back(s2);
+        ths.emplace_back(r1);
+    }
+
+    for (auto [v, r] : send1) {
+        cout << "send " << v << " " << r << endl;
+    }
+    cout << endl;
+    for (auto [v, r] : send2) {
+        cout << "send " << v << " " << r << endl;
+    }
+    cout << endl;
+
+    sort(recv1.begin(), recv1.end(), [](pair<int,bool> p1, pair<int,bool> p2) { return p1.first < p2.first; });
+    for (auto [v, r] : recv1) {
+        cout << "recv " << v << " " << r << endl;
+    };
+}
+
 int main() {
-    testSend1();
+    //testSend1();
+    testSend2();
 }
