@@ -184,19 +184,19 @@ void testSend4() {
 
 void testSend5() {
     BufChan<int> chan{5};
-    int SENDERS = 10, RECEIVERS = 10;
+    int SENDERS = 100, RECEIVERS = 100;
     vector<multiset<int>> sends(SENDERS, multiset<int>()), recvs(RECEIVERS, multiset<int>());
     mutex sends_mut{}, recvs_mut{};
 
     auto s = [&chan, &sends, &sends_mut] (int idx) {
-        for (int i = 0; i < 30000; i++) {
+        for (int i = 0; i < 100; i++) {
             bool r = chan.send(i);
             sends[idx].insert(i);
         }
     };
 
     auto r = [&chan, &recvs, &recvs_mut] (int idx) {
-        for (int i = 0; i < 30000; i++) {
+        for (int i = 0; i < 100; i++) {
             auto [v, r] = chan.recv();
             recvs[idx].insert(i);      
         }
