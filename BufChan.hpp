@@ -38,7 +38,7 @@ struct BufChan {
         mut.lock();
         closed = true;
         mut.unlock();
-        cv.notify_one();
+        cv.notify_all();
     }
 
     pair<T,bool> recv() {
@@ -46,7 +46,11 @@ struct BufChan {
         {
             unique_lock lk{mut};
             while (!closed && curr_size == 0) cv.wait(lk);
-            if (closed && curr_size == 0) return {T(), false}; // if curr_size > 0, there is still an elem we can take
+            
+            // if curr_size > 0, there is still an elem we can take
+            // anyway, if take the if branch, no notify will be called.
+            // hence, close() must call notify_all to wake up all threads sleeping on cv
+            if (closed && curr_size == 0) return {T(), false}; 
             curr_size--;
             out = {buf[s], true};
             s = (s + 1) % buf.size();

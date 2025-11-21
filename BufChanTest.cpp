@@ -157,6 +157,84 @@ void testSend3() {
     cout << endl;
 }
 
+void testSend4() {
+    BufChan<int> chan{5};
+
+    auto r1 = [&chan] (int i) {
+        auto [v, r] = chan.recv();
+        cout << "recv " << v << " " << r << endl;
+        
+    };
+
+    auto stop1 = [&chan] () {
+        this_thread::sleep_for(50ms);
+        chan.close();
+    };
+
+    { 
+        vector<jthread> ths;
+        for (int i = 0; i < 5; i++) {
+            ths.emplace_back(r1, i);
+        }
+        ths.emplace_back(stop1);
+    }
+    
+    cout << endl;
+};
+
+void testSend5() {
+    BufChan<int> chan{5};
+    int SENDERS = 10, RECEIVERS = 10;
+    vector<multiset<int>> sends(SENDERS, multiset<int>()), recvs(RECEIVERS, multiset<int>());
+    mutex sends_mut{}, recvs_mut{};
+
+    auto s = [&chan, &sends, &sends_mut] (int idx) {
+        for (int i = 0; i < 30000; i++) {
+            bool r = chan.send(i);
+            sends[idx].insert(i);
+        }
+    };
+
+    auto r = [&chan, &recvs, &recvs_mut] (int idx) {
+        for (int i = 0; i < 30000; i++) {
+            auto [v, r] = chan.recv();
+            recvs[idx].insert(i);      
+        }
+    };
+
+    auto c = [&chan] () {
+        chan.close();
+    };
+
+    {
+        vector<jthread> ths;
+        for (int i = 0; i < SENDERS; i++) {
+            ths.emplace_back(s, i);
+        }
+        for (int i = 0; i < RECEIVERS; i++) {
+            ths.emplace_back(r, i);
+        }
+        jthread j{c};
+    }
+
+    multiset<int> all_sends, all_recvs;
+    for (auto& m : sends) all_sends.insert(m.begin(), m.end());
+    for (auto& m : recvs) all_recvs.insert(m.begin(), m.end());
+    assert(all_sends == all_recvs);
+    
+    /*for (auto & m : sends) {
+        for (int i : m) {
+            cout << "send " << i << endl;
+        }
+    }
+    cout << endl;
+    for (auto & m : recvs) {
+        for (int i : m) {
+            cout << "recv " << i << endl;
+        }
+    }*/
+};
+
 void testBuffer() {
     BufChan<int> chan{5};
 
@@ -177,5 +255,7 @@ int main() {
     //testSend1();
     //testSend2();
     //testSend3();
-    testBuffer();
+    //testSend4();
+    testSend5();
+    //testBuffer();
 }
